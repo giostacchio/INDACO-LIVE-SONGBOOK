@@ -13,12 +13,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Download current Songbook
-        run: curl -L --fail --retry 3 https://indaco-live-songbook.netlify.app/ -o index.html
+      - name: Mirror current Songbook site
+        run: |
+          mkdir -p /tmp/songbook
+          cd /tmp/songbook
+          wget --mirror --page-requisites --convert-links --adjust-extension --no-host-directories --no-parent https://indaco-live-songbook.netlify.app/
+          rm -rf "$GITHUB_WORKSPACE/.mirror-temp"
+          rsync -a --exclude='.git' --exclude='.github' ./ "$GITHUB_WORKSPACE/"
       - name: Commit imported app
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html
-          git diff --cached --quiet || git commit -m "Import current Indaco Songbook from Netlify"
+          git add -A
+          git diff --cached --quiet || git commit -m "Mirror current Indaco Songbook from Netlify"
           git push
