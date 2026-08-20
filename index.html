@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#312e81">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Indaco Songbook">
+  <title>Indaco Live Songbook</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <button class="brand" data-view="library" aria-label="Apri libreria">
+      <span class="brand-mark">I</span>
+      <span><strong>INDACO</strong><small>LIVE SONGBOOK</small></span>
+    </button>
+    <div class="connection" id="connectionStatus">ONLINE</div>
+  </header>
+
+  <nav class="main-nav" aria-label="Navigazione principale">
+    <button class="nav-btn active" data-view="library">🎵 <span>Brani</span></button>
+    <button class="nav-btn" data-view="setlist">☰ <span>Scaletta</span></button>
+    <button class="nav-btn" data-view="manage">⚙️ <span>Gestione</span></button>
+  </nav>
+
+  <main>
+    <section id="view-library" class="view active">
+      <div class="hero">
+        <div>
+          <p class="eyebrow">REPERTORIO LIVE</p>
+          <h1>Scegli il brano in un tocco</h1>
+          <p id="libraryCount"></p>
+        </div>
+        <button id="quickStartBtn" class="primary big">▶ Avvia scaletta</button>
+      </div>
+
+      <div class="toolbar sticky-tools">
+        <label class="archive-wrap" title="Scegli archivio">
+          <span>📁</span><select id="archiveSelect" aria-label="Archivio"></select>
+        </label>
+        <label class="search-wrap">
+          <span>🔎</span>
+          <input id="searchInput" type="search" placeholder="Cerca titolo, tonalità o artista…" autocomplete="off">
+        </label>
+        <select id="sortSelect" aria-label="Ordinamento">
+          <option value="order">Ordine PDF</option>
+          <option value="az">Titolo A-Z</option>
+          <option value="key">Tonalità</option>
+        </select>
+        <button id="favoritesFilter" class="chip">☆ Preferiti</button>
+      </div>
+
+      <div id="songGrid" class="song-grid"></div>
+      <div id="emptyLibrary" class="empty hidden">Nessun brano trovato.</div>
+    </section>
+
+    <section id="view-setlist" class="view">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">ORDINE DEL LIVE</p>
+          <h1>Scalette</h1>
+        </div>
+        <button id="startSetlistBtn" class="primary">▶ Avvia</button>
+      </div>
+
+      <div class="setlist-toolbar">
+        <select id="setlistSelect" aria-label="Scaletta attiva"></select>
+        <button id="newSetlistBtn">＋ Nuova</button>
+        <button id="renameSetlistBtn">✎ Rinomina</button>
+        <button id="deleteSetlistBtn" class="danger-soft">Elimina</button>
+      </div>
+      <p class="hint">Usa ↑ e ↓ per cambiare l'ordine. Il tasto “＋” nella libreria aggiunge il brano alla scaletta selezionata.</p>
+      <div id="setlistItems" class="setlist-items"></div>
+      <div id="emptySetlist" class="empty hidden">La scaletta è vuota. Vai su “Brani” e premi ＋.</div>
+    </section>
+
+    <section id="view-manage" class="view">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">ARCHIVIO PERSONALE</p>
+          <h1>Aggiungi e gestisci brani</h1>
+        </div>
+      </div>
+
+      <div class="manage-grid">
+        <article class="panel">
+          <h2>Aggiungi un brano</h2>
+          <form id="addSongForm">
+            <label>Titolo<input id="songTitle" required placeholder="Es. Gioia infinita"></label>
+            <div class="two-col">
+              <label>Artista<input id="songArtist" placeholder="Facoltativo"></label>
+              <label>Tonalità<input id="songKey" placeholder="Es. MI, LAm, FA#"></label>
+            </div>
+            <label>File PDF o immagine<input id="songFile" type="file" accept=".pdf,image/png,image/jpeg,image/webp" required></label>
+            <label class="check"><input id="addToCurrentSetlist" type="checkbox"> Aggiungi anche alla scaletta attiva</label>
+            <button class="primary" type="submit">＋ Crea pulsante brano</button>
+          </form>
+        </article>
+
+        <article class="panel">
+          <h2>Importazione rapida</h2>
+          <p>Seleziona più PDF o immagini. Verranno inseriti nell'archivio “Importati singoli”.</p>
+          <input id="quickFiles" type="file" multiple accept=".pdf,image/png,image/jpeg,image/webp">
+          <button id="quickImportBtn" class="secondary">Importa file selezionati</button>
+        </article>
+
+        <article class="panel zip-panel">
+          <h2>Importa un archivio ZIP</h2>
+          <p>Seleziona un file ZIP contenente PDF o immagini: l'app lo estrae e crea automaticamente una nuova cartella ordinata per nome.</p>
+          <label>Nome della cartella<input id="zipArchiveName" placeholder="Es. Brani acustici"></label>
+          <input id="zipFile" type="file" accept=".zip,application/zip">
+          <button id="zipImportBtn" class="primary">📦 Importa ZIP e crea archivio</button>
+          <div id="zipImportProgress" class="progress-box hidden"></div>
+        </article>
+
+        <article class="panel">
+          <h2>Disponibilità offline</h2>
+          <p>I file caricati da te sono già offline. Per gli archivi integrati puoi scaricare tutti i PDF sul dispositivo prima del live.</p>
+          <select id="offlineArchiveSelect" aria-label="Archivio da scaricare offline"></select>
+          <button id="downloadArchiveOfflineBtn" class="secondary">⬇ Scarica archivio offline</button>
+          <div id="offlineProgress" class="progress-box hidden"></div>
+        </article>
+
+        <article class="panel">
+          <h2>Backup</h2>
+          <p>Il backup include brani aggiunti, scalette e preferiti. I 41 brani iniziali restano già integrati nell'app.</p>
+          <div class="button-stack">
+            <button id="exportBackupBtn" class="secondary">⬇ Esporta backup</button>
+            <label class="file-button">⬆ Importa backup<input id="importBackupInput" type="file" accept=".json,.indaco"></label>
+          </div>
+        </article>
+
+        <article class="panel">
+          <h2>Installazione</h2>
+          <p>Installa l'app sulla schermata Home per usarla a tutto schermo e offline.</p>
+          <button id="installBtn" class="primary">Installa / istruzioni</button>
+          <a class="text-link" href="NEW_SCALETTA_2026_B_ORIGINALE.pdf" target="_blank" rel="noopener">Apri il PDF originale</a>
+        </article>
+      </div>
+
+      <article class="panel archive-list-panel">
+        <h2>Cartelle e archivi</h2>
+        <div id="archiveManagerList"></div>
+      </article>
+
+      <article class="panel user-list-panel">
+        <h2>Brani aggiunti da te</h2>
+        <div id="userSongList"></div>
+        <div id="noUserSongs" class="empty">Non hai ancora aggiunto altri brani.</div>
+      </article>
+    </section>
+  </main>
+
+  <div id="viewer" class="viewer hidden" role="dialog" aria-modal="true">
+    <header class="viewer-header">
+      <button id="closeViewerBtn" class="icon-btn" aria-label="Torna ai brani">⌂</button>
+      <div class="viewer-title">
+        <strong id="viewerSongTitle"></strong>
+        <span id="viewerMeta"></span>
+      </div>
+      <button id="wakeLockBtn" class="icon-btn wide" title="Mantieni acceso lo schermo">☀️</button>
+    </header>
+    <div id="viewerContent" class="viewer-content"></div>
+    <footer class="viewer-footer">
+      <button id="prevSongBtn">← Precedente</button>
+      <button id="openExternalBtn">Apri PDF</button>
+      <button id="nextSongBtn">Successiva →</button>
+    </footer>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+  <div id="modal" class="modal hidden">
+    <div class="modal-card">
+      <h2 id="modalTitle">Istruzioni</h2>
+      <div id="modalBody"></div>
+      <button id="modalCloseBtn" class="primary">Ho capito</button>
+    </div>
+  </div>
+
+  <script>window.BUILTIN_SONGS = [{"id": "il-mare-impetuoso", "title": "Il mare impetuoso", "artist": "", "key": "MI", "file": "songs/01-il-mare-impetuoso.pdf", "type": "application/pdf", "order": 1, "sourcePages": [2], "builtin": true}, {"id": "transalcolico", "title": "Transalcolico", "artist": "", "key": "FA#", "file": "songs/02-transalcolico.pdf", "type": "application/pdf", "order": 2, "sourcePages": [3], "builtin": true}, {"id": "in-ogni-atomo", "title": "In ogni atomo", "artist": "", "key": "FA#", "file": "songs/03-in-ogni-atomo.pdf", "type": "application/pdf", "order": 3, "sourcePages": [4], "builtin": true}, {"id": "siamo-umani", "title": "Siamo umani", "artist": "", "key": "LAm", "file": "songs/04-siamo-umani.pdf", "type": "application/pdf", "order": 4, "sourcePages": [5], "builtin": true}, {"id": "che-dio-ti-benedica", "title": "Che Dio ti benedica", "artist": "", "key": "LAm", "file": "songs/05-che-dio-ti-benedica.pdf", "type": "application/pdf", "order": 5, "sourcePages": [6], "builtin": true}, {"id": "fabbrica-di-plastica", "title": "Fabbrica di plastica", "artist": "", "key": "SOL", "file": "songs/06-fabbrica-di-plastica.pdf", "type": "application/pdf", "order": 6, "sourcePages": [7], "builtin": true}, {"id": "libera-nos-a-malo", "title": "Libera nos a malo", "artist": "", "key": "RE", "file": "songs/07-libera-nos-a-malo.pdf", "type": "application/pdf", "order": 7, "sourcePages": [8], "builtin": true}, {"id": "you-really-got-me", "title": "You Really Got Me", "artist": "", "key": "LAm", "file": "songs/08-you-really-got-me.pdf", "type": "application/pdf", "order": 8, "sourcePages": [9], "builtin": true}, {"id": "male-di-miele", "title": "Male di miele", "artist": "", "key": "SI", "file": "songs/09-male-di-miele.pdf", "type": "application/pdf", "order": 9, "sourcePages": [10], "builtin": true}, {"id": "nuvole-e-lenzuola", "title": "Nuvole e lenzuola", "artist": "", "key": "SIm", "file": "songs/10-nuvole-e-lenzuola.pdf", "type": "application/pdf", "order": 10, "sourcePages": [11], "builtin": true}, {"id": "insieme-a-te", "title": "Insieme a te sto bene", "artist": "", "key": "MI", "file": "songs/11-insieme-a-te.pdf", "type": "application/pdf", "order": 11, "sourcePages": [12], "builtin": true}, {"id": "born-to-be-wild", "title": "Born to Be Wild", "artist": "", "key": "MI", "file": "songs/12-born-to-be-wild.pdf", "type": "application/pdf", "order": 12, "sourcePages": [13], "builtin": true}, {"id": "trappole", "title": "Trappole", "artist": "", "key": "LA", "file": "songs/13-trappole.pdf", "type": "application/pdf", "order": 13, "sourcePages": [14, 15], "builtin": true}, {"id": "extraterrestre", "title": "Extraterrestre", "artist": "", "key": "RE", "file": "songs/14-extraterrestre.pdf", "type": "application/pdf", "order": 14, "sourcePages": [16], "builtin": true}, {"id": "sole-spento", "title": "Sole spento", "artist": "", "key": "MI", "file": "songs/15-sole-spento.pdf", "type": "application/pdf", "order": 15, "sourcePages": [17], "builtin": true}, {"id": "sangue-impazzito", "title": "Sangue impazzito", "artist": "", "key": "SIm", "file": "songs/16-sangue-impazzito.pdf", "type": "application/pdf", "order": 16, "sourcePages": [18], "builtin": true}, {"id": "nun-me-scoccia", "title": "Nun me scoccia'", "artist": "", "key": "LA", "file": "songs/17-nun-me-scoccia.pdf", "type": "application/pdf", "order": 17, "sourcePages": [19], "builtin": true}, {"id": "monna-lisa", "title": "Monna Lisa", "artist": "", "key": "MI", "file": "songs/18-monna-lisa.pdf", "type": "application/pdf", "order": 18, "sourcePages": [20], "builtin": true}, {"id": "cambio", "title": "Cambio", "artist": "", "key": "LA", "file": "songs/19-cambio.pdf", "type": "application/pdf", "order": 19, "sourcePages": [21], "builtin": true}, {"id": "rotolando-verso-sud", "title": "Rotolando verso sud", "artist": "", "key": "DO#m", "file": "songs/20-rotolando-verso-sud.pdf", "type": "application/pdf", "order": 20, "sourcePages": [22], "builtin": true}, {"id": "via", "title": "Via", "artist": "", "key": "LA / SI", "file": "songs/21-via.pdf", "type": "application/pdf", "order": 21, "sourcePages": [23], "builtin": true}, {"id": "sally", "title": "Sally", "artist": "", "key": "RE", "file": "songs/22-sally.pdf", "type": "application/pdf", "order": 22, "sourcePages": [24], "builtin": true}, {"id": "siamo-solo-noi", "title": "Siamo solo noi", "artist": "", "key": "RE", "file": "songs/23-siamo-solo-noi.pdf", "type": "application/pdf", "order": 23, "sourcePages": [25], "builtin": true}, {"id": "spari-sopra", "title": "Spari sopra", "artist": "", "key": "RE", "file": "songs/24-spari-sopra.pdf", "type": "application/pdf", "order": 24, "sourcePages": [26], "builtin": true}, {"id": "dimentichiamoci", "title": "Dimentichiamoci questa città", "artist": "", "key": "RE / LA", "file": "songs/25-dimentichiamoci.pdf", "type": "application/pdf", "order": 25, "sourcePages": [27], "builtin": true}, {"id": "mare-d-inverno", "title": "Il mare d'inverno", "artist": "", "key": "DO", "file": "songs/26-mare-d-inverno.pdf", "type": "application/pdf", "order": 26, "sourcePages": [28], "builtin": true}, {"id": "intanto-il-tempo-passa", "title": "Intanto il tempo passa", "artist": "", "key": "MI", "file": "songs/27-intanto-il-tempo-passa.pdf", "type": "application/pdf", "order": 27, "sourcePages": [29], "builtin": true}, {"id": "capitan-uncino", "title": "Capitan Uncino", "artist": "", "key": "LA", "file": "songs/28-capitan-uncino.pdf", "type": "application/pdf", "order": 28, "sourcePages": [30], "builtin": true}, {"id": "terremoto", "title": "Terremoto", "artist": "", "key": "LA", "file": "songs/29-terremoto.pdf", "type": "application/pdf", "order": 29, "sourcePages": [31], "builtin": true}, {"id": "diavolo-in-me", "title": "Diavolo in me", "artist": "", "key": "MI", "file": "songs/30-diavolo-in-me.pdf", "type": "application/pdf", "order": 30, "sourcePages": [32], "builtin": true}, {"id": "impressioni-di-settembre", "title": "Impressioni di settembre", "artist": "", "key": "REm", "file": "songs/31-impressioni-di-settembre.pdf", "type": "application/pdf", "order": 31, "sourcePages": [33], "builtin": true}, {"id": "mama-mae", "title": "Mama Maè", "artist": "", "key": "LAm", "file": "songs/32-mama-mae.pdf", "type": "application/pdf", "order": 32, "sourcePages": [34], "builtin": true}, {"id": "urlando-contro-il-cielo", "title": "Urlando contro il cielo", "artist": "", "key": "LA", "file": "songs/33-urlando-contro-il-cielo.pdf", "type": "application/pdf", "order": 33, "sourcePages": [35], "builtin": true}, {"id": "el-diablo", "title": "El Diablo", "artist": "", "key": "LA", "file": "songs/34-el-diablo.pdf", "type": "application/pdf", "order": 34, "sourcePages": [36], "builtin": true}, {"id": "pippo", "title": "Pippo", "artist": "", "key": "REm", "file": "songs/35-pippo.pdf", "type": "application/pdf", "order": 35, "sourcePages": [37], "builtin": true}, {"id": "tempo-di-morire", "title": "Tempo di morire", "artist": "", "key": "LA", "file": "songs/36-tempo-di-morire.pdf", "type": "application/pdf", "order": 36, "sourcePages": [38], "builtin": true}, {"id": "lo-spettacolo", "title": "Lo spettacolo", "artist": "", "key": "MI", "file": "songs/37-lo-spettacolo.pdf", "type": "application/pdf", "order": 37, "sourcePages": [39], "builtin": true}, {"id": "highway-to-hell", "title": "Highway to Hell", "artist": "", "key": "LA", "file": "songs/38-highway-to-hell.pdf", "type": "application/pdf", "order": 38, "sourcePages": [40], "builtin": true}, {"id": "you-shook-me-all-night-long", "title": "You Shook Me All Night Long", "artist": "", "key": "SOL", "file": "songs/39-you-shook-me-all-night-long.pdf", "type": "application/pdf", "order": 39, "sourcePages": [41], "builtin": true}, {"id": "should-i-stay-or-should-i-go", "title": "Should I Stay or Should I Go", "artist": "", "key": "RE", "file": "songs/40-should-i-stay-or-should-i-go.pdf", "type": "application/pdf", "order": 40, "sourcePages": [42], "builtin": true}, {"id": "america", "title": "L'America", "artist": "", "key": "—", "file": "songs/41-america.pdf", "type": "application/pdf", "order": 41, "sourcePages": [43, 44], "builtin": true}];</script>
+  <script src="vendor/jszip.min.js"></script>
+  <script src="archive-data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
